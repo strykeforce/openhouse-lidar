@@ -4,28 +4,31 @@ import edu.wpi.first.wpilibj.command.Command;
 
 public class TurnCommand extends Command {
 
-  private final static double max = 0.5;
-  private final static double min = -0.5;
-  private ServoSubsystem servoSubsystem;
-  private LidarSubsystem lidarSubsystem;
+  private final double min;
+  private final double max;
+  private final ServoSubsystem servoSubsystem = Robot.servoSubsystem;
+  private final LidarSubsystem lidarSubsystem = Robot.lidarSubsystem;
   private double lidarDistance;
 
-  public TurnCommand() {
-    servoSubsystem = Robot.getServoSubsystem();
-    lidarSubsystem = Robot.getLidarSubsystem();
+  public TurnCommand(double min, double max) {
+    this.min = min;
+    this.max = max;
     requires(servoSubsystem);
     requires(lidarSubsystem);
   }
 
   @Override
-  protected void execute() {
-    lidarDistance = lidarSubsystem.getLidarDistance();
-    turn(lidarDistance);
-
+  protected void initialize() {
+    System.out.println("initialize");
   }
 
-  public void turn(double lidarDistance) {
-    servoSubsystem.setPosition((max - min) * (lidarDistance - min) / (max - min) - min);
+  @Override
+  protected void execute() {
+    lidarDistance = lidarSubsystem.getLidarDistance();
+    //    System.out.println("lidarDistance = " + lidarDistance);
+    double servoPosition = ((lidarDistance - min) / (max - min));
+    System.out.println("servo = " + servoPosition);
+    servoSubsystem.setPosition(servoPosition);
   }
 
   @Override

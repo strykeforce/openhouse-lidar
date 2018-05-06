@@ -10,12 +10,12 @@ import edu.wpi.first.wpilibj.filters.LinearDigitalFilter;
 
 public class LidarSubsystem extends Subsystem {
 
-  private static final int CANIFIER_ID = 0;
+  private static final int CANIFIER_ID = 34;
   private static final int LIDAR_READ_PERIOD_MS = 10;
   private static final int NUM_TAPS = 2;
 
-  private final double kLidarSlope = 1.0;
-  private final double kLidarOffset = 0.0;
+  private static final double LIDAR_SLOPE = 1.0;
+  private static final double LIDAR_OFFSET = 0.0;
 
   private final CANifier canifier = new CANifier(CANIFIER_ID);
   private final double lidarPwmData[] = new double[2];
@@ -25,30 +25,28 @@ public class LidarSubsystem extends Subsystem {
   private boolean lidarEnabled = false;
   private Timer lidarTimer;
 
-
   public LidarSubsystem() {
 
     lidarFilter =
-            LinearDigitalFilter.movingAverage(
-                    new PIDSource() {
-                      @Override
-                      public PIDSourceType getPIDSourceType() {
-                        return PIDSourceType.kDisplacement;
-                      }
+        LinearDigitalFilter.movingAverage(
+            new PIDSource() {
+              @Override
+              public PIDSourceType getPIDSourceType() {
+                return PIDSourceType.kDisplacement;
+              }
 
-                      @Override
-                      public void setPIDSourceType(PIDSourceType pidSource) {
-                      }
+              @Override
+              public void setPIDSourceType(PIDSourceType pidSource) {}
 
-                      @Override
-                      public double pidGet() {
-                        canifier.getPWMInput(CANifier.PWMChannel.PWMChannel2, lidarPwmData);
-                        return kLidarSlope * lidarPwmData[0] + kLidarOffset;
-                      }
-                    },
-                    NUM_TAPS);
+              @Override
+              public double pidGet() {
+                canifier.getPWMInput(CANifier.PWMChannel.PWMChannel0, lidarPwmData);
+                return LIDAR_SLOPE * lidarPwmData[0] + LIDAR_OFFSET;
+              }
+            },
+            NUM_TAPS);
 
-    enableLidar(false);
+    enableLidar(true);
   }
 
   public void enableLidar(boolean enable) {
@@ -56,7 +54,7 @@ public class LidarSubsystem extends Subsystem {
     if (enable) {
       canifier.setGeneralOutput(CANifier.GeneralPin.LIMF, true, true);
       canifier.setStatusFramePeriod(
-              CANifierStatusFrame.Status_5_PwmInputs2, LIDAR_READ_PERIOD_MS, 0);
+          CANifierStatusFrame.Status_5_PwmInputs2, LIDAR_READ_PERIOD_MS, 0);
       lidarTimer = new Timer();
       lidarTimer.start();
     } else {
@@ -68,8 +66,7 @@ public class LidarSubsystem extends Subsystem {
   }
 
   @Override
-  protected void initDefaultCommand() {
-  }
+  protected void initDefaultCommand() {}
 
   @Override
   public void periodic() {
@@ -81,5 +78,4 @@ public class LidarSubsystem extends Subsystem {
   public double getLidarDistance() {
     return lidarFilter.get();
   }
-
 }
