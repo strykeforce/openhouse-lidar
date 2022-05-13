@@ -2,11 +2,13 @@ package org.strykeforce.openhouselidar;
 
 import com.ctre.phoenix.CANifier;
 import com.ctre.phoenix.CANifierStatusFrame;
+
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Subsystem;
-import edu.wpi.first.wpilibj.filters.LinearDigitalFilter;
+
 
 public class LidarSubsystem extends Subsystem {
 
@@ -20,7 +22,7 @@ public class LidarSubsystem extends Subsystem {
   private final CANifier canifier = new CANifier(CANIFIER_ID);
   private final double lidarPwmData[] = new double[2];
   private final double shoulderPwmData[] = new double[2];
-  private final LinearDigitalFilter lidarFilter;
+  private final LinearFilter lidarFilter;
 
   private boolean lidarEnabled = false;
   private Timer lidarTimer;
@@ -28,29 +30,14 @@ public class LidarSubsystem extends Subsystem {
   public LidarSubsystem() {
 
     lidarFilter =
-        LinearDigitalFilter.movingAverage(
-            new PIDSource() {
-              @Override
-              public PIDSourceType getPIDSourceType() {
-                return PIDSourceType.kDisplacement;
-              }
-
-              @Override
-              public void setPIDSourceType(PIDSourceType pidSource) {}
-
-              @Override
-              public double pidGet() {
-                canifier.getPWMInput(CANifier.PWMChannel.PWMChannel0, lidarPwmData);
-                return LIDAR_SLOPE * lidarPwmData[0] + LIDAR_OFFSET;
-              }
-            },
-            NUM_TAPS);
+        LinearFilter.movingAverage(NUM_TAPS);
 
     enableLidar(true);
   }
 
   public void enableLidar(boolean enable) {
     lidarEnabled = enable;
+    
     if (enable) {
       canifier.setGeneralOutput(CANifier.GeneralPin.LIMF, true, true);
       canifier.setStatusFramePeriod(
@@ -65,17 +52,25 @@ public class LidarSubsystem extends Subsystem {
     }
   }
 
+  public double lidarGet() {
+    canifier.getPWMInput(CANifier.PWMChannel.PWMChannel0, lidarPwmData);
+    return LIDAR_SLOPE * lidarPwmData[0] + LIDAR_OFFSET;
+  }
+
   @Override
   protected void initDefaultCommand() {}
 
   @Override
   public void periodic() {
+    System.out.println(lidarGet());
+
     if (lidarEnabled && lidarTimer.hasPeriodPassed(LIDAR_READ_PERIOD_MS / 1000.0)) {
-      lidarFilter.pidGet();
+      // lidarFilter.;
     }
   }
 
   public double getLidarDistance() {
-    return lidarFilter.get();
+    return 0.0;
+    // return lidarFilter.calculate(input);
   }
 }
