@@ -24,7 +24,7 @@ public class TurnCommand extends Command {
 
   @Override
   protected void execute() {
-    lidarDistance = lidarSubsystem.getLidarDistance();
+    lidarDistance = lidarSubsystem.lidarGet();
     //    System.out.println("lidarDistance = " + lidarDistance);
     double servoPosition = ((lidarDistance - min) / (max - min));
     System.out.println("servo = " + servoPosition);
